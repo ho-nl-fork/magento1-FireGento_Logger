@@ -103,6 +103,11 @@ class FireGento_Logger_Model_Papertrailsyslog extends FireGento_Logger_Model_Rsy
             }
         }
 
+        $logFiles = Mage::helper('firegento_logger')->getLoggerConfig('papertrailsyslog/limit_log_files');
+        if (!empty($logFiles) && !in_array($this->_options['FileName'], explode(',', $logFiles))) {
+            return false;
+        }
+
         return new FireGento_Logger_Model_Papertrail_PapertrailSyslogMessage(
             $message,
             16,

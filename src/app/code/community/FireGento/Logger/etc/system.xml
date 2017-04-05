@@ -599,6 +599,14 @@
                             <show_in_default>1</show_in_default>
                             <comment>This value will be prefixed to the Log messages.</comment>
                         </app_name>
+                        <limit_log_files>
+                            <label>Limit Log Files</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>50</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <comment><![CDATA[Comma separated list of log file names that need to be sent to Papertrail.
+                            When empty, loglines of all files are sent (example value: <i>system.log,cron.log</i>)]]></comment>
+                        </limit_log_files>
                     </fields>
                 </papertrailsyslog>
                 <chromelogger>

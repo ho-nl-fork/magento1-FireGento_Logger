@@ -179,6 +179,10 @@ class FireGento_Logger_Model_Rsyslog extends Zend_Log_Writer_Abstract
         $event = Mage::helper('firegento_logger')->getEventObjectFromArray($event);
 
         $message = $this->buildSysLogMessage($event);
+        if (!$message) {
+            return false;
+        }
+
         return $this->publishMessage($message);
     }
 
