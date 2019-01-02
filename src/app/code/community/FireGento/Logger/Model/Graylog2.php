@@ -27,7 +27,7 @@ require_once 'Graylog2-gelf-php/GELFMessagePublisher.php';
  * @package  FireGento_Logger
  * @author   FireGento Team <team@firegento.com>
  */
-class FireGento_Logger_Model_Graylog2 extends Zend_Log_Writer_Abstract
+class FireGento_Logger_Model_Graylog2 extends FireGento_Logger_Model_Abstract
 {
     /**
      * @var array
@@ -43,21 +43,6 @@ class FireGento_Logger_Model_Graylog2 extends Zend_Log_Writer_Abstract
      * @var GELFMessagePublisher[]
      */
     protected static $_publishers = array();
-
-    /**
-     * @var bool
-     */
-    protected $_enableBacktrace = false;
-
-    /**
-     * Setter for class variable _enableBacktrace
-     *
-     * @param bool $flag Flag for Backtrace
-     */
-    public function setEnableBacktrace($flag)
-    {
-        $this->_enableBacktrace = $flag;
-    }
 
     /**
      * Use static method so all loggers share same publisher
@@ -112,7 +97,7 @@ class FireGento_Logger_Model_Graylog2 extends Zend_Log_Writer_Abstract
 
             Mage::helper('firegento_logger')->addEventMetadata($event);
 
-            $message = $event->getMessage();
+            $message = trim($event->getMessage());
 
             $eofMessageFirstLine = strpos($message, "\n");
             $shortMessage = (false === $eofMessageFirstLine) ? $message :
@@ -134,7 +119,7 @@ class FireGento_Logger_Model_Graylog2 extends Zend_Log_Writer_Abstract
             $msg->setAdditional('store_code', $event->getStoreCode());
             $msg->setAdditional('time_elapsed', $event->getTimeElapsed());
             $msg->setHost(php_uname('n'));
-            foreach (array('getRequestMethod', 'getRequestUri', 'getRemoteIp', 'getHttpUserAgent') as $method) {
+            foreach (array('getRequestMethod', 'getRequestUri', 'getRemoteIp', 'getHttpUserAgent','getHttpHost','getHttpCookie','getSessionData') as $method) {
                 if (is_callable(array($event, $method)) && $event->$method()) {
                     $msg->setAdditional(lcfirst(substr($method, 3)), $event->$method());
                 }
@@ -146,14 +131,4 @@ class FireGento_Logger_Model_Graylog2 extends Zend_Log_Writer_Abstract
         }
     }
 
-    /**
-     * Satisfy newer Zend Framework
-     *
-     * @param  array|Zend_Config $config Configuration
-     * @return void|Zend_Log_FactoryInterface
-     */
-    public static function factory($config)
-    {
-
-    }
 }

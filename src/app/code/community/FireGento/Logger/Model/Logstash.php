@@ -25,12 +25,8 @@
  * @package  FireGento_Logger
  * @author   FireGento Team <team@firegento.com>
  */
-class FireGento_Logger_Model_Logstash extends Zend_Log_Writer_Abstract
+class FireGento_Logger_Model_Logstash extends FireGento_Logger_Model_Abstract
 {
-    /**
-     * @var bool Indicates if backtrace should be added to the Log Message.
-     */
-    protected $_enableBacktrace = false;
     protected $_logstashServer = false;
     protected $_logstashPort = false;
     protected $_logstashProtocol = false;
@@ -59,27 +55,6 @@ class FireGento_Logger_Model_Logstash extends Zend_Log_Writer_Abstract
     }
 
     /**
-     * Satisfy newer Zend Framework
-     *
-     * @param  array|Zend_Config $config Configuration
-     * @return void|Zend_Log_FactoryInterface
-     */
-    public static function factory($config)
-    {
-
-    }
-
-    /**
-     * Setter for class variable _enableBacktrace
-     *
-     * @param bool $flag Flag for Backtrace
-     */
-    public function setEnableBacktrace($flag)
-    {
-        $this->_enableBacktrace = $flag;
-    }
-
-    /**
      * Builds a JSON Message that will be sent to a Logstash Server.
      *
      * @param  FireGento_Logger_Model_Event $event           A Magento Log Event.
@@ -99,15 +74,19 @@ class FireGento_Logger_Model_Logstash extends Zend_Log_Writer_Abstract
         $fields['StoreCode'] = $event->getStoreCode();
         $fields['TimeElapsed'] = $event->getTimeElapsed();
         $fields['SourceHost'] = $event->getHostname();
-        $fields['Message'] = $event->getMessage();
+        $fields['message'] = $event->getMessage();
         $fields['Backtrace'] = $event->getBacktrace();
         $fields['RequestMethod'] = $event->getRequestMethod();
         $fields['RequestData'] = $event->getRequestData();
         $fields['RemoteAddress'] = $event->getRemoteAddress();
-        $fields['HttpHost'] = Mage::app()->getRequest()->getHttpHost();
+        /** this prevents different datatypes as getHttpHost() returns either string or boolean (false) */
+        $fields['HttpHost'] = (!Mage::app()->getRequest()->getHttpHost()) ? 'cli': Mage::app()->getRequest()->getHttpHost();
         $fields['LogFileName'] = $this->_logFileName;
-        $fields['SessionId'] = Mage::getSingleton("core/session")->getEncryptedSessionId();
-        $fields['CustomerId'] = Mage::getSingleton('customer/session')->getCustomerId(); 
+        // Only add session fields if a session was already instantiated and logger should not start a new session
+        if (isset($_SESSION)) {
+            $fields['SessionId'] = Mage::getSingleton("core/session")->getEncryptedSessionId();
+            $fields['CustomerId'] = Mage::getSingleton('customer/session')->getCustomerId();
+        }
 
         // udp/tcp inputs require a trailing EOL character.
         $encodedMessage = trim(json_encode($fields)) . "\n";
@@ -125,7 +104,6 @@ class FireGento_Logger_Model_Logstash extends Zend_Log_Writer_Abstract
     {
         /* @var $helper FireGento_Logger_Helper_Data */
         $helper = Mage::helper('firegento_logger');
-
         $fp = fsockopen(
             sprintf('%s://%s', $this->_logstashProtocol, $this->_logstashServer),
             $this->_logstashPort,
